@@ -1,7 +1,37 @@
+import { db } from '../firebase/firebase'
+import { collection, doc, getDoc, setDoc, getDocs } from 'firebase/firestore'
+import { useState, useEffect } from 'react'
 function Home() {
+    const [items, setItems] = useState([])
+
+    const getItem = async () => {
+        const collectionRef = collection(db, 'items')
+        const querySnapshot = await getDocs(collectionRef)
+
+        const itemsList = []
+
+        querySnapshot.forEach((doc) => {
+            itemsList.push({
+                id: doc.id,
+                ...doc.data(),
+            })
+        })
+
+        setItems(itemsList)
+    }
+
+    useEffect(() => {
+        getItem()
+    }, [])
+
     return (
         <div className="min-h-screen bg-gray-100">
-            <h1 className="text-3xl font-bold text-center text-blue-600">안녕하세요!</h1>
+            {items.map((item) => (
+                <div key={item.id} className="bg-white p-4 rounded-lg shadow">
+                    <h2 className="text-xl font-bold">{item.title}</h2>
+                    <p className="mt-2">{item.content}</p>
+                </div>
+            ))}
         </div>
     )
 }

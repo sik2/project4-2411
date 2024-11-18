@@ -19,15 +19,6 @@ function Home() {
         getItems()
     }, [])
 
-    // 12개의 더미 데이터 생성
-    const dummyItems = Array(3)
-        .fill()
-        .map((_, index) => ({
-            id: index,
-            title: `Title`,
-            date: '2024.11.05',
-        }))
-
     return (
         <div className="max-w-7xl mx-auto px-4 min-h-screen">
             {/* 카테고리 필터 */}
@@ -51,7 +42,7 @@ function Home() {
 
             {/* 4 * 3 그리드 레이아웃 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {dummyItems.map((item) => (
+                {items.map((item) => (
                     <div
                         key={item.id}
                         className="bg-white rounded-lg shadow-md overflow-hidden h-[280px] flex flex-col"

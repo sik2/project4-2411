@@ -1,5 +1,32 @@
 function Footer() {
-    return <div>풋터</div>
+    return (
+        <footer className="bg-gray-800 text-white mt-16 py-8">
+            <div className="max-w-7xl mx-auto px-4">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <div className="flex items-center space-x-2 mb-4">
+                            <span className="bg-yellow-400 px-2 py-1 rounded text-sm text-gray-800">Button</span>
+                            <h2 className="text-2xl font-bold">Tech Blocks</h2>
+                        </div>
+                    </div>
+                    <div className="flex space-x-6 text-sm">
+                        <a href="#" className="hover:underline">
+                            Privacy Policy
+                        </a>
+                        <a href="#" className="hover:underline">
+                            Terms & Conditions
+                        </a>
+                        <a href="#" className="hover:underline">
+                            Cookie Policy
+                        </a>
+                        <a href="#" className="hover:underline">
+                            Contact
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    )
 }
 
 export default Footer

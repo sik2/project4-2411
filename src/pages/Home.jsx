@@ -20,7 +20,7 @@ function Home() {
     }, [])
 
     return (
-        <div className="max-w-7xl mx-auto px-4 min-h-screen">
+        <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-120px)]">
             {/* 카테고리 필터 */}
             <div className="flex space-x-4 mb-6">
                 <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">All</button>
@@ -63,18 +63,6 @@ function Home() {
                             <div className="text-sm text-gray-500">{item.date}</div>
                         </div>
                     </div>
-                ))}
-            </div>
-
-            {/* 페이지네이션 */}
-            <div className="flex justify-center space-x-2 mt-12 mb-8">
-                {[1, 2, 3, 4, 5].map((page) => (
-                    <button
-                        key={page}
-                        className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100"
-                    >
-                        {page}
-                    </button>
                 ))}
             </div>
         </div>

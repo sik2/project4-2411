@@ -34,7 +34,7 @@ function Register() {
     }
 
     return (
-        <div className="flex-1 flex items-center justify-center min-h-screen">
+        <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-120px)]">
             <div className="w-full max-w-md p-6">
                 <h1 className="text-2xl font-bold text-center mb-8">Membership</h1>
                 <form onSubmit={handleSubmit} className="space-y-4">

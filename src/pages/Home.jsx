@@ -1,6 +1,7 @@
 import { db } from '../firebase/firebase'
 import { collection, getDocs } from 'firebase/firestore'
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 
 function Home() {
     const [items, setItems] = useState([])
@@ -47,21 +48,24 @@ function Home() {
                         key={item.id}
                         className="bg-white rounded-lg shadow-md overflow-hidden h-[280px] flex flex-col"
                     >
-                        {/* 이미지 영역 - 16:9 비율 유지 */}
-                        <div className="relative pb-[56.25%] bg-gray-200">
-                            <div className="absolute inset-0"></div>
-                        </div>
-                        {/* 컨텐츠 영역 */}
-                        <div className="p-4 flex-1 flex flex-col">
-                            <div className="flex items-center space-x-2 mb-2">
-                                <div className="w-6 h-6 rounded-full bg-gray-300 flex-shrink-0"></div>
-                                <span className="text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">
-                                    username01
-                                </span>
+                        <Link to={`/post/${item.id}`}>
+                            {/* 이미지 영역 - 16:9 비율 유지 */}
+                            <div className="relative pb-[56.25%] bg-gray-200">
+                                <div className="absolute inset-0"></div>
                             </div>
-                            <h3 className="font-semibold mb-2 text-sm line-clamp-2 flex-1">{item.title}</h3>
-                            <div className="text-sm text-gray-500">{item.date}</div>
-                        </div>
+                            {/* 컨텐츠 영역 */}
+
+                            <div className="p-4 flex-1 flex flex-col">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <div className="w-6 h-6 rounded-full bg-gray-300 flex-shrink-0"></div>
+                                    <span className="text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">
+                                        username01
+                                    </span>
+                                </div>
+                                <h3 className="font-semibold mb-2 text-sm line-clamp-2 flex-1">{item.title}</h3>
+                                <div className="text-sm text-gray-500">{item.date}</div>
+                            </div>
+                        </Link>
                     </div>
                 ))}
             </div>

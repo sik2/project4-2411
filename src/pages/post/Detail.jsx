@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { db } from '../../firebase/firebase'
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import ReactLoading from 'react-loading'
 
 function Detail() {
     const { id } = useParams()
@@ -40,9 +41,15 @@ function Detail() {
         getPost()
     }, [id])
 
-    if (loading) return <div>Loading...</div>
-    if (error) return <div>{error}</div>
-    if (!post) return null
+    if (loading)
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-center">
+                    <ReactLoading type="spin" color="#4F46E5" height={50} width={50} className="mx-auto mb-4" />
+                    <p className="text-gray-600">로딩중...</p>
+                </div>
+            </div>
+        )
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -60,11 +67,11 @@ function Detail() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-lg p-6 mb-8 min-h-[400px]">
+            <div className="bg-white rounded-lg p-6 mb-8 h-[400px] overflow-y-auto">
                 <div className="prose max-w-none">{post.content}</div>
             </div>
 
-            <div className="bg-white rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6 h-[300px] overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4">댓글 ({comments.length})</h2>
 
                 <div className="space-y-4">

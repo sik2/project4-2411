@@ -2,23 +2,41 @@ import { useState, useEffect } from 'react'
 import { db } from '../../firebase/firebase'
 import { collection, getDocs } from 'firebase/firestore'
 import { Link } from 'react-router-dom'
+import ReactLoading from 'react-loading'
 
 function List() {
     const [searchTerm, setSearchTerm] = useState('')
     const [items, setItems] = useState([])
+    const [loading, setLoading] = useState(true)
 
     const getItems = async () => {
-        const querySnapshot = await getDocs(collection(db, 'items'))
-        const itemsList = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }))
-        setItems(itemsList)
+        try {
+            const querySnapshot = await getDocs(collection(db, 'items'))
+            const itemsList = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+            setItems(itemsList)
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {
         getItems()
     }, [])
+
+    if (loading)
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-center">
+                    <ReactLoading type="spin" color="#4F46E5" height={50} width={50} className="mx-auto mb-4" />
+                    <p className="text-gray-600">로딩중...</p>
+                </div>
+            </div>
+        )
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-120px)]">

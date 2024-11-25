@@ -27,7 +27,7 @@
 -   [x] 목록에서 상세페이지로 이동
 -   [x] 로딩 효과 추가
 -   [x] 게시글 등록
--   [ ] Axios 도입, Tanstack Query 도입
+-   [x] Axios 도입, Tanstack Query 도입
 -   [ ] 게시글 삭제
 -   [ ] 게시글 수정
 

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { db } from '../../firebase/firebase'
 import { collection, getDocs } from 'firebase/firestore'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import ReactLoading from 'react-loading'
 
 function List() {
     const [searchTerm, setSearchTerm] = useState('')
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
+    const navigate = useNavigate()
 
     const getItems = async () => {
         try {
@@ -40,6 +41,17 @@ function List() {
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-120px)]">
+            {/* 상단 제목과 글쓰기 버튼 */}
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold">게시글 목록</h1>
+                <button
+                    onClick={() => navigate('/post/write')}
+                    className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                >
+                    글쓰기
+                </button>
+            </div>
+
             {/* 카테고리 필터 */}
             <div className="flex space-x-4 mb-6">
                 <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">All</button>

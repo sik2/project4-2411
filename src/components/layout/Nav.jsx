@@ -31,8 +31,8 @@ function Nav() {
                     </Link>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <Link to="/posts">
-                        <button className="bg-gray-800 text-white px-4 py-2 rounded">posts</button>
+                    <Link to="/post/list">
+                        <button className="bg-gray-800 text-white px-4 py-2 rounded">List</button>
                     </Link>
                     {/* 로그인 상태 판별 */}
                     {auth.currentUser ? (

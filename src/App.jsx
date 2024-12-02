@@ -9,6 +9,7 @@ import Detail from './pages/post/Detail'
 import Create from './pages/post/Create'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import Edit from './pages/post/Edit'
 
 function App() {
     return (
@@ -20,6 +21,7 @@ function App() {
                 <Route path="/post/list" element={<List />} />
                 <Route path="/post/:id" element={<Detail />} />
                 <Route path="/post/write" element={<Create />} />
+                <Route path="/post/edit/:id" element={<Edit />} />
                 <Route path="*" element={<NotFound />} /> {/* 404 페이지 추가 */}
             </Routes>
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />

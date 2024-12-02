@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { db } from '../../firebase/firebase'
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { doc, getDoc, collection, getDocs, deleteDoc, query, where } from 'firebase/firestore'
 import ReactLoading from 'react-loading'
+import { useNavigate } from 'react-router-dom'
 
 function Detail() {
     const { id } = useParams()
     const [post, setPost] = useState(null)
     const [comments, setComments] = useState([])
     const [loading, setLoading] = useState(true)
+    const navigate = useNavigate()
     const [error, setError] = useState(null)
 
     useEffect(() => {
@@ -41,6 +43,24 @@ function Detail() {
         getPost()
     }, [id])
 
+    const handleDelete = async () => {
+        if (!window.confirm('게시글을 삭제하시겠습니까?')) {
+            return
+        }
+
+        try {
+            setLoading(true)
+            // 게시글 삭제
+            await deleteDoc(doc(db, 'items', id))
+            alert('게시글이 삭제되었습니다.')
+            navigate('/post/list')
+        } catch (error) {
+            console.error('삭제 중 오류 발생:', error)
+            alert('게시글 삭제에 실패했습니다.')
+        } finally {
+            setLoading(false)
+        }
+    }
     if (loading)
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -54,10 +74,8 @@ function Detail() {
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="mb-8">
-                {/* TODO: 삭제 버튼 내용 하단으로 */}
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-bold">{post.title}</h1>
-                    <button className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700">삭제</button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {post.tags?.map((tag, index) => (
@@ -75,8 +93,16 @@ function Detail() {
                 <div className="prose max-w-none">{post.content}</div>
             </div>
 
+            <div className="flex justify-end mb-8">
+                <button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    삭제
+                </button>
+            </div>
+
             <div className="bg-white rounded-lg p-6 h-[300px] overflow-y-auto">
-                <h2 className="text-xl font-bold mb-4">댓글 ({comments.length})</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">댓글 ({comments.length})</h2>
+                </div>
 
                 <div className="space-y-4">
                     {comments.map((comment) => (

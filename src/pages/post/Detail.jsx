@@ -54,7 +54,11 @@ function Detail() {
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+                {/* TODO: 삭제 버튼 내용 하단으로 */}
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-3xl font-bold">{post.title}</h1>
+                    <button className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700">삭제</button>
+                </div>
                 <div className="flex flex-wrap gap-2">
                     {post.tags?.map((tag, index) => (
                         <span

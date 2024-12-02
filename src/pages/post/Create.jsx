@@ -2,6 +2,7 @@ import { addDoc, collection } from 'firebase/firestore'
 import { useState } from 'react'
 import { db } from '../../firebase/firebase'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 function Create() {
     const [title, setTitle] = useState('')
@@ -14,11 +15,26 @@ function Create() {
             const docRef = await addDoc(collection(db, 'items'), {
                 title: title,
                 content: content,
+                tags: tags.split(',').map((tag) => tag.trim()),
             })
             console.log('item written with ID: ', docRef.id)
+            toast.success('게시글이 성공적으로 작성되었습니다.', {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
             navigate('/post/list')
         } catch (err) {
             console.error(err)
+            toast.error('게시글 작성에 실패했습니다.', {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
         }
     }
 

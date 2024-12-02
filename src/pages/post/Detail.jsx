@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { db } from '../../firebase/firebase'
 import { doc, getDoc, collection, getDocs, deleteDoc, query, where } from 'firebase/firestore'
 import ReactLoading from 'react-loading'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 function Detail() {
     const { id } = useParams()
@@ -50,13 +51,24 @@ function Detail() {
 
         try {
             setLoading(true)
-            // 게시글 삭제
             await deleteDoc(doc(db, 'items', id))
-            alert('게시글이 삭제되었습니다.')
-            navigate('/post/list')
+            toast.success('게시글이 삭제되었습니다.', {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
+            navigate('/')
         } catch (error) {
             console.error('삭제 중 오류 발생:', error)
-            alert('게시글 삭제에 실패했습니다.')
+            toast.error('게시글 삭제에 실패했습니다.', {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
         } finally {
             setLoading(false)
         }
@@ -83,6 +95,7 @@ function Detail() {
                             key={index}
                             className="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer"
                         >
+                            {/* TODO 해시태그 */}
                             {tag}
                         </span>
                     ))}
@@ -93,7 +106,10 @@ function Detail() {
                 <div className="prose max-w-none">{post.content}</div>
             </div>
 
-            <div className="flex justify-end mb-8">
+            <div className="flex justify-end gap-4 mb-8">
+                <Link to="/post/list" className="px-4 py-2 text-white bg-indigo-500 rounded hover:bg-indigo-600">
+                    목록
+                </Link>
                 <button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
                     삭제
                 </button>

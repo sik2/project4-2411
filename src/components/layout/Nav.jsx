@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '../../firebase/firebase'
 import { signOut } from 'firebase/auth'
+import { toast } from 'react-toastify'
 
 function Nav() {
     const navigate = useNavigate()
@@ -11,9 +12,11 @@ function Nav() {
         try {
             setIsLoading(true)
             await signOut(auth)
+            toast.success('로그아웃되었습니다.')
             navigate('/login')
         } catch (error) {
             console.error('로그아웃 실패:', error)
+            toast.error('로그아웃에 실패했습니다.')
         } finally {
             setIsLoading(false)
         }
@@ -32,24 +35,30 @@ function Nav() {
                 </div>
                 <div className="flex items-center space-x-4">
                     <Link to="/post/list">
-                        <button className="bg-gray-800 text-white px-4 py-2 rounded">List</button>
+                        <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">List</button>
                     </Link>
-                    {/* 로그인 상태 판별 */}
+
                     {auth.currentUser ? (
-                        <button
-                            onClick={handleLogout}
-                            disabled={isLoading}
-                            className="bg-gray-800 text-white px-4 py-2 rounded disabled:opacity-50"
-                        >
-                            {isLoading ? 'Logging out...' : 'Logout'}
-                        </button>
+                        <>
+                            <button
+                                onClick={handleLogout}
+                                disabled={isLoading}
+                                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50"
+                            >
+                                {isLoading ? 'Logging out...' : 'Logout'}
+                            </button>
+                        </>
                     ) : (
                         <>
                             <Link to="/login">
-                                <button className="bg-gray-800 text-white px-4 py-2 rounded">Login</button>
+                                <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">
+                                    Login
+                                </button>
                             </Link>
                             <Link to="/register">
-                                <button className="bg-gray-800 text-white px-4 py-2 rounded">Register</button>
+                                <button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">
+                                    Register
+                                </button>
                             </Link>
                         </>
                     )}

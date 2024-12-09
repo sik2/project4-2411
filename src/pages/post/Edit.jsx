@@ -9,11 +9,37 @@ function Edit() {
     const { id } = useParams()
     const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
+    const [tagInput, setTagInput] = useState('')
     const [formData, setFormData] = useState({
         title: '',
         content: '',
         tags: [],
     })
+
+    // 태그 추가 함수
+    const handleAddTag = (e) => {
+        e.preventDefault()
+        if (!tagInput.trim()) return
+
+        if (formData.tags.includes(tagInput.trim())) {
+            toast.error('이미 존재하는 태그입니다.')
+            return
+        }
+
+        setFormData({
+            ...formData,
+            tags: [...formData.tags, tagInput.trim()],
+        })
+        setTagInput('')
+    }
+
+    // 태그 삭제 함수
+    const handleRemoveTag = (indexToRemove) => {
+        setFormData({
+            ...formData,
+            tags: formData.tags.filter((_, index) => index !== indexToRemove),
+        })
+    }
 
     useEffect(() => {
         const getPost = async () => {
@@ -45,12 +71,17 @@ function Edit() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        if (!formData.title.trim() || !formData.content.trim()) {
+            toast.error('제목과 내용을 입력해주세요.')
+            return
+        }
+
         try {
             setLoading(true)
             const docRef = doc(db, 'items', id)
             await updateDoc(docRef, {
-                title: formData.title,
-                content: formData.content,
+                title: formData.title.trim(),
+                content: formData.content.trim(),
                 tags: formData.tags,
                 updatedAt: new Date().toISOString(),
             })
@@ -62,21 +93,6 @@ function Edit() {
             toast.error('게시글 수정에 실패했습니다.')
         } finally {
             setLoading(false)
-        }
-    }
-
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        if (name === 'tags') {
-            setFormData({
-                ...formData,
-                [name]: value.split(',').map((tag) => tag.trim()),
-            })
-        } else {
-            setFormData({
-                ...formData,
-                [name]: value,
-            })
         }
     }
 
@@ -105,25 +121,44 @@ function Edit() {
                         id="title"
                         name="title"
                         value={formData.title}
-                        onChange={handleChange}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-                        태그
-                    </label>
-                    <input
-                        type="text"
-                        id="tags"
-                        name="tags"
-                        value={formData.tags.join(', ')}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="태그를 쉼표로 구분하여 입력하세요"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">태그</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.tags.map((tag, index) => (
+                            <span key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center">
+                                #{tag}
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveTag(index)}
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={tagInput}
+                            onChange={(e) => setTagInput(e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="태그를 입력하세요"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleAddTag}
+                            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                        >
+                            태그 추가
+                        </button>
+                    </div>
                 </div>
 
                 <div>
@@ -134,7 +169,7 @@ function Edit() {
                         id="content"
                         name="content"
                         value={formData.content}
-                        onChange={handleChange}
+                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                         rows={12}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required

@@ -1,4 +1,4 @@
-import { db } from '../firebase/firebase'
+import { db, auth } from '../firebase/firebase'
 import { collection, getDocs } from 'firebase/firestore'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
@@ -31,35 +31,44 @@ function Home() {
     if (loading)
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <div className="text-center">
-                    <ReactLoading type="spin" color="#4F46E5" height={50} width={50} className="mx-auto mb-4" />
-                    <p className="text-gray-600">로딩중...</p>
-                </div>
+                <ReactLoading type="spin" color="#000" />
             </div>
         )
 
     return (
-        <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-120px)]">
-            {/* 카테고리 필터 */}
-            <div className="flex space-x-4 mb-6">
-                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">All</button>
-                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">New</button>
-                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">Hot</button>
-            </div>
-
-            {/* 검색바 */}
-            <div className="mb-8">
-                <div className="flex">
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        className="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button className="px-6 py-2 bg-gray-800 text-white rounded-r hover:bg-gray-700">Search</button>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex space-x-4">
+                    <button
+                        onClick={() => setSelectedCategory('All')}
+                        className={`px-4 py-2 rounded-lg ${
+                            selectedCategory === 'All'
+                                ? 'bg-gray-800 text-white'
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        }`}
+                    >
+                        All
+                    </button>
+                    <button
+                        onClick={() => setSelectedCategory('Popular')}
+                        className={`px-4 py-2 rounded-lg ${
+                            selectedCategory === 'Popular'
+                                ? 'bg-gray-800 text-white'
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        }`}
+                    >
+                        Popular
+                    </button>
                 </div>
+                {auth.currentUser && (
+                    <Link to="/post/write">
+                        <button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                            글쓰기
+                        </button>
+                    </Link>
+                )}
             </div>
 
-            {/* 4 * 3 그리드 레이아웃 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {items.map((item) => (
                     <div
@@ -67,11 +76,9 @@ function Home() {
                         className="bg-white rounded-lg shadow-md overflow-hidden h-[280px] flex flex-col"
                     >
                         <Link to={`/post/${item.id}`}>
-                            {/* 이미지 영역 - 16:9 비율 유지 */}
                             <div className="relative pb-[56.25%] bg-gray-200">
                                 <div className="absolute inset-0"></div>
                             </div>
-                            {/* 컨텐츠 영역 */}
 
                             <div className="p-4 flex-1 flex flex-col">
                                 <div className="flex items-center space-x-2 mb-2">

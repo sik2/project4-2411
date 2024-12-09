@@ -7,34 +7,67 @@ import { toast } from 'react-toastify'
 function Create() {
     const [title, setTitle] = useState('')
     const [content, setContent] = useState('')
-    const [tags, setTags] = useState('')
+    const [tagInput, setTagInput] = useState('')
+    const [tags, setTags] = useState([])
     const navigate = useNavigate()
+
+    // 태그 입력 함수 수정
+    const handleTagInput = (e) => {
+        const value = e.target.value
+
+        // 스페이스바 입력 시 태그 추가
+        if (value.includes(' ')) {
+            const newTags = value
+                .split(' ')
+                .map((tag) => tag.trim())
+                .filter((tag) => tag !== '')
+
+            // 중복 제거 및 기존 태그와 합치기
+            const uniqueTags = [...new Set([...tags, ...newTags])]
+            setTags(uniqueTags)
+            setTagInput('')
+        } else {
+            setTagInput(value)
+        }
+    }
+
+    // Enter 키 입력 시 태그 추가
+    const handleTagInputKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            if (tagInput.trim()) {
+                if (!tags.includes(tagInput.trim())) {
+                    setTags([...tags, tagInput.trim()])
+                }
+                setTagInput('')
+            }
+        }
+    }
+
+    // 태그 삭제 함수
+    const handleRemoveTag = (indexToRemove) => {
+        setTags(tags.filter((_, index) => index !== indexToRemove))
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
+        if (!title.trim() || !content.trim()) {
+            toast.error('제목과 내용을 입력해주세요.')
+            return
+        }
+
         try {
             const docRef = await addDoc(collection(db, 'items'), {
-                title: title,
-                content: content,
-                tags: tags.split(',').map((tag) => tag.trim()),
+                title: title.trim(),
+                content: content.trim(),
+                tags: tags,
+                createdAt: new Date().toISOString(),
             })
-            console.log('item written with ID: ', docRef.id)
-            toast.success('게시글이 성공적으로 작성되었습니다.', {
-                position: 'top-right',
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            })
+            toast.success('게시글이 성공적으로 작성되었습니다.')
             navigate('/post/list')
         } catch (err) {
             console.error(err)
-            toast.error('게시글 작성에 실패했습니다.', {
-                position: 'top-right',
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            })
+            toast.error('게시글 작성에 실패했습니다.')
         }
     }
 
@@ -53,22 +86,33 @@ function Create() {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="제목을 입력하세요"
                         required
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-                        태그
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">태그</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                        {tags.map((tag, index) => (
+                            <span key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center">
+                                #{tag}
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveTag(index)}
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </div>
                     <input
                         type="text"
-                        id="tags"
-                        value={tags}
-                        onChange={(e) => setTags(e.target.value)}
+                        value={tagInput}
+                        onChange={handleTagInput}
+                        onKeyDown={handleTagInputKeyDown}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="태그를 입력하세요 (쉼표로 구분)"
+                        placeholder="태그 입력 (스페이스바 또는 엔터로 구분)"
                     />
                 </div>
 
@@ -82,7 +126,6 @@ function Create() {
                         onChange={(e) => setContent(e.target.value)}
                         rows={12}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="내용을 입력하세요"
                         required
                     />
                 </div>
@@ -90,8 +133,8 @@ function Create() {
                 <div className="flex justify-end gap-4">
                     <button
                         type="button"
+                        onClick={() => navigate('/post/list')}
                         className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                        onClick={() => window.history.back()}
                     >
                         취소
                     </button>

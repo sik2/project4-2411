@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { auth } from '../../firebase/firebase'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const Login = () => {
     const navigate = useNavigate()
@@ -14,10 +15,16 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
+            // 로그인 상태 유지 설정
+            await setPersistence(auth, browserLocalPersistence)
+            // 로그인 시도
             await signInWithEmailAndPassword(auth, formData.email, formData.password)
+            toast.success('로그인되었습니다.')
             navigate('/')
         } catch (error) {
+            console.error('Login error:', error)
             setError('아이디 또는 비밀번호가 일치하지 않습니다.')
+            toast.error('로그인에 실패했습니다.')
         }
     }
 

@@ -89,17 +89,19 @@ function Detail() {
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-bold">{post.title}</h1>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    {post.tags?.map((tag, index) => (
-                        <span
-                            key={index}
-                            className="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer"
-                        >
-                            {/* TODO 해시태그 */}
-                            {tag}
-                        </span>
-                    ))}
-                </div>
+                {post.tags && post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {post.tags.map((tag, index) => (
+                            <span
+                                key={index}
+                                className="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer"
+                            >
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+                <hr className="border-t border-gray-200 my-4" />
             </div>
 
             <div className="bg-white rounded-lg p-6 mb-8 h-[400px] overflow-y-auto">
@@ -113,7 +115,7 @@ function Detail() {
                 <Link to={`/post/edit/${id}`} className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
                     수정
                 </Link>
-                <button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                <button onClick={handleDelete} className="px-4 py-2 text-white bg-red-500 rounded hover:bg-red-600">
                     삭제
                 </button>
             </div>

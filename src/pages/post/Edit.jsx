@@ -9,11 +9,10 @@ function Edit() {
     const { id } = useParams()
     const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
-    const [formData, setFormData] = useState({
-        title: '',
-        content: '',
-        tags: [],
-    })
+    const [title, setTitle] = useState('')
+    const [content, setContent] = useState('')
+    const [tagInput, setTagInput] = useState('')
+    const [tags, setTags] = useState([])
 
     useEffect(() => {
         const getPost = async () => {
@@ -23,11 +22,10 @@ function Edit() {
 
                 if (docSnap.exists()) {
                     const data = docSnap.data()
-                    setFormData({
-                        title: data.title || '',
-                        content: data.content || '',
-                        tags: data.tags || [],
-                    })
+                    setTitle(data.title || '')
+                    setContent(data.content || '')
+                    const existingTags = data.tags || []
+                    setTags(existingTags.map((tag) => tag.replace('#', '')))
                 } else {
                     toast.error('게시글을 찾을 수 없습니다.')
                     navigate('/post/list')
@@ -43,15 +41,62 @@ function Edit() {
         getPost()
     }, [id, navigate])
 
+    const handleAddTag = () => {
+        const newTag = tagInput.trim()
+        if (newTag) {
+            if (tags.includes(newTag)) {
+                toast.warning('이미 존재하는 태그입니다.', {
+                    position: 'top-right',
+                    autoClose: 2000,
+                })
+                setTagInput('')
+                return
+            }
+            setTags([...tags, newTag])
+            setTagInput('')
+        }
+    }
+
+    const handleTagInputKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            handleAddTag()
+        }
+    }
+
+    const handleTagInputChange = (e) => {
+        const value = e.target.value
+        if (value.endsWith(' ')) {
+            const newTag = value.trim()
+            if (newTag) {
+                if (tags.includes(newTag)) {
+                    toast.warning('이미 존재하는 태그입니다.', {
+                        position: 'top-right',
+                        autoClose: 2000,
+                    })
+                } else {
+                    setTags([...tags, newTag])
+                }
+            }
+            setTagInput('')
+        } else {
+            setTagInput(value)
+        }
+    }
+
+    const removeTag = (indexToRemove) => {
+        setTags(tags.filter((_, index) => index !== indexToRemove))
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
             setLoading(true)
             const docRef = doc(db, 'items', id)
             await updateDoc(docRef, {
-                title: formData.title,
-                content: formData.content,
-                tags: formData.tags,
+                title,
+                content,
+                tags,
                 updatedAt: new Date().toISOString(),
             })
 
@@ -62,21 +107,6 @@ function Edit() {
             toast.error('게시글 수정에 실패했습니다.')
         } finally {
             setLoading(false)
-        }
-    }
-
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        if (name === 'tags') {
-            setFormData({
-                ...formData,
-                [name]: value.split(',').map((tag) => tag.trim()),
-            })
-        } else {
-            setFormData({
-                ...formData,
-                [name]: value,
-            })
         }
     }
 
@@ -103,9 +133,8 @@ function Edit() {
                     <input
                         type="text"
                         id="title"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleChange}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                     />
@@ -115,15 +144,41 @@ function Edit() {
                     <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
                         태그
                     </label>
-                    <input
-                        type="text"
-                        id="tags"
-                        name="tags"
-                        value={formData.tags.join(', ')}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="태그를 쉼표로 구분하여 입력하세요"
-                    />
+                    <div className="flex gap-2 mb-2">
+                        <input
+                            type="text"
+                            id="tags"
+                            value={tagInput}
+                            onChange={handleTagInputChange}
+                            onKeyPress={handleTagInputKeyPress}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="태그를 입력하고 스페이스바 또는 엔터를 누르세요"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleAddTag}
+                            className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                        >
+                            추가
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {tags.map((tag, index) => (
+                            <span
+                                key={index}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800"
+                            >
+                                #{tag}
+                                <button
+                                    type="button"
+                                    onClick={() => removeTag(index)}
+                                    className="ml-2 text-gray-500 hover:text-gray-700"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </div>
                 </div>
 
                 <div>
@@ -132,9 +187,8 @@ function Edit() {
                     </label>
                     <textarea
                         id="content"
-                        name="content"
-                        value={formData.content}
-                        onChange={handleChange}
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
                         rows={12}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required

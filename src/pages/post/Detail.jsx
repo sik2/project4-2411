@@ -96,71 +96,44 @@ function Detail() {
     }
 
     useEffect(() => {
-        const getPost = async () => {
+        const fetchPost = async () => {
             try {
-                // 게시글 정보 가져오기
-                const postDoc = await getDoc(doc(db, 'items', id))
-                if (!postDoc.exists()) {
-                    setError('게시글을 찾을 수 없습니다.')
-                    return
+                const docRef = doc(db, 'items', id)
+                const docSnap = await getDoc(docRef)
+                if (docSnap.exists()) {
+                    setPost({ id: docSnap.id, ...docSnap.data() })
+                } else {
+                    toast.error('게시글을 찾을 수 없습니다.')
+                    navigate('/post/list')
                 }
-                setPost({ id: postDoc.id, ...postDoc.data() })
-
-                // 댓글 정보 가져오기
-                const commentsQuery = query(collection(db, 'comments'), where('postId', '==', id))
-                const commentsSnapshot = await getDocs(commentsQuery)
-                const commentsList = commentsSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }))
-                setComments(commentsList)
-            } catch (err) {
-                setError('데이터를 불러오는데 실패했습니다.')
-                console.error(err)
+            } catch (error) {
+                console.error('Error fetching post:', error)
+                toast.error('게시글을 불러오는데 실패했습니다.')
             } finally {
                 setLoading(false)
             }
         }
 
-        getPost()
-    }, [id])
+        fetchPost()
+    }, [id, navigate])
 
     const handleDelete = async () => {
-        if (!window.confirm('게시글을 삭제하시겠습니까?')) {
-            return
-        }
+        if (!window.confirm('정말로 삭제하시겠습니까?')) return
 
         try {
-            setLoading(true)
             await deleteDoc(doc(db, 'items', id))
-            toast.success('게시글이 삭제되었습니다.', {
-                position: 'top-right',
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            })
-            navigate('/')
+            toast.success('게시글이 삭제되었습니다.')
+            navigate('/post/list')
         } catch (error) {
-            console.error('삭제 중 오류 발생:', error)
-            toast.error('게시글 삭제에 실패했습니다.', {
-                position: 'top-right',
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-            })
-        } finally {
-            setLoading(false)
+            console.error('Error deleting post:', error)
+            toast.error('게시글 삭제에 실패했습니다.')
         }
     }
+
     if (loading)
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <div className="text-center">
-                    <ReactLoading type="spin" color="#4F46E5" height={50} width={50} className="mx-auto mb-4" />
-                    <p className="text-gray-600">로딩중...</p>
-                </div>
+                <ReactLoading type="spin" color="#000" />
             </div>
         )
 
@@ -191,9 +164,22 @@ function Detail() {
                 <Link to="/post/list" className="px-4 py-2 text-white bg-indigo-500 rounded hover:bg-indigo-600">
                     목록
                 </Link>
-                <button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                    삭제
-                </button>
+                {auth.currentUser?.uid === post.userId && (
+                    <>
+                        <Link
+                            to={`/post/edit/${id}`}
+                            className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                        >
+                            수정
+                        </Link>
+                        <button
+                            onClick={handleDelete}
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        >
+                            삭제
+                        </button>
+                    </>
+                )}
             </div>
 
             <div className="bg-white rounded-lg p-6">

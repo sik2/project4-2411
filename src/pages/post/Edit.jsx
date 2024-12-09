@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { db } from '../../firebase/firebase'
+import { useNavigate, useParams } from 'react-router-dom'
+import { db, auth } from '../../firebase/firebase'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { toast } from 'react-toastify'
 import ReactLoading from 'react-loading'
@@ -8,13 +8,56 @@ import ReactLoading from 'react-loading'
 function Edit() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const [loading, setLoading] = useState(true)
+    const [initialLoading, setInitialLoading] = useState(true)
+    const [submitLoading, setSubmitLoading] = useState(false)
     const [tagInput, setTagInput] = useState('')
     const [formData, setFormData] = useState({
         title: '',
         content: '',
         tags: [],
     })
+
+    useEffect(() => {
+        const fetchPost = async () => {
+            try {
+                const docRef = doc(db, 'items', id)
+                const docSnap = await getDoc(docRef)
+
+                if (docSnap.exists()) {
+                    const postData = docSnap.data()
+
+                    if (postData.userId !== auth.currentUser?.uid) {
+                        toast.error('수정 권한이 없습니다.')
+                        navigate('/post/list')
+                        return
+                    }
+
+                    setFormData({
+                        title: postData.title,
+                        content: postData.content,
+                        tags: postData.tags || [],
+                    })
+                } else {
+                    toast.error('게시글을 찾을 수 없습니다.')
+                    navigate('/post/list')
+                }
+            } catch (error) {
+                console.error('Error fetching post:', error)
+                toast.error('게시글을 불러오는데 실패했습니다.')
+                navigate('/post/list')
+            } finally {
+                setInitialLoading(false)
+            }
+        }
+
+        if (!auth.currentUser) {
+            toast.error('로그인이 필요한 서비스입니다.')
+            navigate('/login')
+            return
+        }
+
+        fetchPost()
+    }, [id, navigate])
 
     // 태그 추가 함수
     const handleAddTag = (e) => {
@@ -41,34 +84,6 @@ function Edit() {
         })
     }
 
-    useEffect(() => {
-        const getPost = async () => {
-            try {
-                const docRef = doc(db, 'items', id)
-                const docSnap = await getDoc(docRef)
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data()
-                    setFormData({
-                        title: data.title || '',
-                        content: data.content || '',
-                        tags: data.tags || [],
-                    })
-                } else {
-                    toast.error('게시글을 찾을 수 없습니다.')
-                    navigate('/post/list')
-                }
-            } catch (error) {
-                console.error('Error fetching post:', error)
-                toast.error('게시글 불러오기에 실패했습니다.')
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        getPost()
-    }, [id, navigate])
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (!formData.title.trim() || !formData.content.trim()) {
@@ -77,7 +92,7 @@ function Edit() {
         }
 
         try {
-            setLoading(true)
+            setSubmitLoading(true)
             const docRef = doc(db, 'items', id)
             await updateDoc(docRef, {
                 title: formData.title.trim(),
@@ -91,18 +106,14 @@ function Edit() {
         } catch (error) {
             console.error('Error updating post:', error)
             toast.error('게시글 수정에 실패했습니다.')
-        } finally {
-            setLoading(false)
+            setSubmitLoading(false)
         }
     }
 
-    if (loading) {
+    if (initialLoading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <div className="text-center">
-                    <ReactLoading type="spin" color="#4F46E5" height={50} width={50} className="mx-auto mb-4" />
-                    <p className="text-gray-600">로딩중...</p>
-                </div>
+                <ReactLoading type="spin" color="#000" />
             </div>
         )
     }
@@ -119,7 +130,6 @@ function Edit() {
                     <input
                         type="text"
                         id="title"
-                        name="title"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -167,7 +177,6 @@ function Edit() {
                     </label>
                     <textarea
                         id="content"
-                        name="content"
                         value={formData.content}
                         onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                         rows={12}
@@ -181,11 +190,20 @@ function Edit() {
                         type="button"
                         onClick={() => navigate(`/post/${id}`)}
                         className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                        disabled={submitLoading}
                     >
                         취소
                     </button>
-                    <button type="submit" className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
-                        수정하기
+                    <button
+                        type="submit"
+                        className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center min-w-[100px]"
+                        disabled={submitLoading}
+                    >
+                        {submitLoading ? (
+                            <ReactLoading type="spin" height={20} width={20} color="#ffffff" />
+                        ) : (
+                            '수정하기'
+                        )}
                     </button>
                 </div>
             </form>

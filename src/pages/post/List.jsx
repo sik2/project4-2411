@@ -6,6 +6,7 @@ import ReactLoading from 'react-loading'
 
 function List() {
     const [searchTerm, setSearchTerm] = useState('')
+    const [searchResults, setSearchResults] = useState(null)
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
     const [allTags, setAllTags] = useState([])
@@ -40,7 +41,39 @@ function List() {
         getItems()
     }, [])
 
-    const filteredItems = selectedTag ? items.filter((item) => item.tags && item.tags.includes(selectedTag)) : items
+    const handleSearch = () => {
+        if (!searchTerm.trim()) {
+            setSearchResults(null)
+            return
+        }
+
+        const searchTermLower = searchTerm.toLowerCase()
+        const results = items.filter((item) => {
+            const titleMatch = item.title?.toLowerCase().includes(searchTermLower)
+            const contentMatch = item.content?.toLowerCase().includes(searchTermLower)
+            const tagMatch = item.tags?.some((tag) => tag.toLowerCase().includes(searchTermLower))
+            const commentMatch = item.comments?.some((comment) =>
+                comment.content?.toLowerCase().includes(searchTermLower),
+            )
+
+            return titleMatch || contentMatch || tagMatch || commentMatch
+        })
+
+        setSearchResults(results)
+    }
+
+    const handleSearchKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch()
+        }
+    }
+
+    const filteredItems =
+        searchResults !== null
+            ? searchResults.filter((item) => !selectedTag || (item.tags && item.tags.includes(selectedTag)))
+            : selectedTag
+            ? items.filter((item) => item.tags && item.tags.includes(selectedTag))
+            : items
 
     if (loading) {
         return (
@@ -62,7 +95,7 @@ function List() {
                     onClick={() => navigate('/post/write')}
                     className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
                 >
-                    글쓰기
+                    New
                 </button>
             </div>
 
@@ -98,14 +131,27 @@ function List() {
                 <div className="flex">
                     <input
                         type="text"
-                        placeholder="Search..."
+                        placeholder="제목, 내용, 태그, 댓글로 검색..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyPress={handleSearchKeyPress}
                         className="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <button className="px-6 py-2 bg-gray-800 text-white rounded-r hover:bg-gray-700">Search</button>
+                    <button
+                        onClick={handleSearch}
+                        className="px-6 py-2 bg-gray-800 text-white rounded-r hover:bg-gray-700"
+                    >
+                        Search
+                    </button>
                 </div>
             </div>
 
-            {/* 4 * 3 그리드 레이아웃 */}
+            {/* 검색 결과 메시지 수정 */}
+            {searchResults !== null && searchResults.length === 0 && (
+                <div className="text-center text-gray-500 my-8">검색 결과가 없습니다.</div>
+            )}
+
+            {/* 그리드 레이아웃 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredItems.map((item) => (
                     <div
@@ -127,6 +173,13 @@ function List() {
                                     </span>
                                 </div>
                                 <h3 className="font-semibold mb-2 text-sm line-clamp-2 flex-1">{item.title}</h3>
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                    {item.tags?.map((tag, index) => (
+                                        <span key={index} className="text-xs text-indigo-600">
+                                            #{tag}
+                                        </span>
+                                    ))}
+                                </div>
                                 <div className="text-sm text-gray-500">{item.date}</div>
                             </div>
                         </Link>

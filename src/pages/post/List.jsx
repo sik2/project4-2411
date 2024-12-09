@@ -8,6 +8,8 @@ function List() {
     const [searchTerm, setSearchTerm] = useState('')
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
+    const [allTags, setAllTags] = useState([])
+    const [selectedTag, setSelectedTag] = useState(null)
     const navigate = useNavigate()
 
     const getItems = async () => {
@@ -18,6 +20,15 @@ function List() {
                 ...doc.data(),
             }))
             setItems(itemsList)
+
+            const tags = itemsList.reduce((acc, item) => {
+                if (item.tags && Array.isArray(item.tags)) {
+                    return [...acc, ...item.tags]
+                }
+                return acc
+            }, [])
+            const uniqueTags = [...new Set(tags)]
+            setAllTags(uniqueTags)
         } catch (err) {
             console.error(err)
         } finally {
@@ -29,7 +40,9 @@ function List() {
         getItems()
     }, [])
 
-    if (loading)
+    const filteredItems = selectedTag ? items.filter((item) => item.tags && item.tags.includes(selectedTag)) : items
+
+    if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <div className="text-center">
@@ -38,6 +51,7 @@ function List() {
                 </div>
             </div>
         )
+    }
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-120px)]">
@@ -52,11 +66,31 @@ function List() {
                 </button>
             </div>
 
-            {/* 카테고리 필터 */}
-            <div className="flex space-x-4 mb-6">
-                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">All</button>
-                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">New</button>
-                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">Hot</button>
+            {/* 태그 필터 */}
+            <div className="flex flex-wrap gap-2 mb-6">
+                <button
+                    onClick={() => setSelectedTag(null)}
+                    className={`px-4 py-2 rounded-full border ${
+                        selectedTag === null
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'border-gray-300 hover:bg-gray-100'
+                    }`}
+                >
+                    All
+                </button>
+                {allTags.map((tag) => (
+                    <button
+                        key={tag}
+                        onClick={() => setSelectedTag(tag)}
+                        className={`px-4 py-2 rounded-full border ${
+                            selectedTag === tag
+                                ? 'bg-indigo-600 text-white border-indigo-600'
+                                : 'border-gray-300 hover:bg-gray-100'
+                        }`}
+                    >
+                        #{tag}
+                    </button>
+                ))}
             </div>
 
             {/* 검색바 */}
@@ -73,7 +107,7 @@ function List() {
 
             {/* 4 * 3 그리드 레이아웃 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {items.map((item) => (
+                {filteredItems.map((item) => (
                     <div
                         key={item.id}
                         className="bg-white rounded-lg shadow-md overflow-hidden h-[280px] flex flex-col"

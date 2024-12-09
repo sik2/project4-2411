@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { db, auth } from '../../firebase/firebase'
+import { db } from '../../firebase/firebase'
 import { collection, getDocs } from 'firebase/firestore'
 import { Link, useNavigate } from 'react-router-dom'
 import ReactLoading from 'react-loading'
@@ -32,47 +32,46 @@ function List() {
     if (loading)
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <ReactLoading type="spin" color="#000" />
+                <div className="text-center">
+                    <ReactLoading type="spin" color="#4F46E5" height={50} width={50} className="mx-auto mb-4" />
+                    <p className="text-gray-600">로딩중...</p>
+                </div>
             </div>
         )
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-120px)]">
+            {/* 상단 제목과 글쓰기 버튼 */}
             <div className="flex justify-between items-center mb-8">
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="검색어를 입력하세요"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            ></path>
-                        </svg>
-                    </span>
-                </div>
-                {auth.currentUser && (
-                    <Link to="/post/write">
-                        <button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-                            글쓰기
-                        </button>
-                    </Link>
-                )}
+                <h1 className="text-3xl font-bold">게시글 목록</h1>
+                <button
+                    onClick={() => navigate('/post/write')}
+                    className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                >
+                    글쓰기
+                </button>
             </div>
 
+            {/* 카테고리 필터 */}
+            <div className="flex space-x-4 mb-6">
+                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">All</button>
+                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">New</button>
+                <button className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100">Hot</button>
+            </div>
+
+            {/* 검색바 */}
+            <div className="mb-8">
+                <div className="flex">
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button className="px-6 py-2 bg-gray-800 text-white rounded-r hover:bg-gray-700">Search</button>
+                </div>
+            </div>
+
+            {/* 4 * 3 그리드 레이아웃 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {items.map((item) => (
                     <div
@@ -80,9 +79,11 @@ function List() {
                         className="bg-white rounded-lg shadow-md overflow-hidden h-[280px] flex flex-col"
                     >
                         <Link to={`/post/${item.id}`}>
+                            {/* 이미지 영역 - 16:9 비율 유지 */}
                             <div className="relative pb-[56.25%] bg-gray-200">
                                 <div className="absolute inset-0"></div>
                             </div>
+                            {/* 컨텐츠 영역 */}
 
                             <div className="p-4 flex-1 flex flex-col">
                                 <div className="flex items-center space-x-2 mb-2">

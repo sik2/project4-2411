@@ -17,34 +17,49 @@ function Detail() {
 
     // 댓글 목록 새로고침 함수
     const refreshComments = async () => {
-        const commentsQuery = query(collection(db, 'comments'), where('postId', '==', id))
-        const commentsSnapshot = await getDocs(commentsQuery)
-        const commentsList = commentsSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }))
-        setComments(commentsList)
+        try {
+            const commentsQuery = query(collection(db, 'comments'), where('postId', '==', id))
+            const commentsSnapshot = await getDocs(commentsQuery)
+            const commentsList = commentsSnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+                // 유효성 검사 추가
+                userId: doc.data().userId || null,
+                author: doc.data().author || '알 수 없음',
+            }))
+            setComments(commentsList)
+        } catch (error) {
+            console.error('댓글 로딩 실패:', error)
+            toast.error('댓글을 불러오는데 실패했습니다.')
+        }
     }
 
     // 댓글 등록 함수
     const handleCommentSubmit = async (e) => {
         e.preventDefault()
+
+        // 로그인 체크
         if (!auth.currentUser) {
             toast.error('댓글을 작성하려면 로그인이 필요합니다.')
+            navigate('/login')
             return
         }
+
         if (!newComment.trim()) {
             toast.error('댓글 내용을 입력해주세요.')
             return
         }
 
         try {
-            await addDoc(collection(db, 'comments'), {
+            // author 필드 제거하고 userId만 저장
+            const commentData = {
                 postId: id,
                 content: newComment,
-                author: auth.currentUser.email,
                 createdAt: serverTimestamp(),
-            })
+                userId: auth.currentUser.uid,
+            }
+
+            await addDoc(collection(db, 'comments'), commentData)
             setNewComment('')
             toast.success('댓글이 등록되었습니다.')
             await refreshComments()
@@ -55,7 +70,17 @@ function Detail() {
     }
 
     // 댓글 삭제 함수
-    const handleCommentDelete = async (commentId) => {
+    const handleCommentDelete = async (commentId, commentUserId) => {
+        if (!auth.currentUser) {
+            toast.error('로그인이 필요합니다.')
+            return
+        }
+
+        if (auth.currentUser.uid !== commentUserId) {
+            toast.error('자신의 댓글만 삭제할 수 있습니다.')
+            return
+        }
+
         if (!window.confirm('댓글을 삭제하시겠습니까?')) {
             return
         }
@@ -141,84 +166,87 @@ function Detail() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-3xl font-bold">{post.title}</h1>
+            <div className="bg-white rounded-lg p-6 mb-8">
+                <div className="border-b pb-4 mb-4">
+                    <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
                 </div>
+
                 <div className="flex flex-wrap gap-2">
                     {post.tags?.map((tag, index) => (
                         <span
                             key={index}
-                            className="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer"
+                            className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600 hover:bg-gray-200"
                         >
-                            {/* TODO 해시태그 */}
-                            {tag}
+                            #{tag}
                         </span>
                     ))}
                 </div>
             </div>
 
-            <div className="bg-white rounded-lg p-6 mb-8 h-[400px] overflow-y-auto">
-                <div className="prose max-w-none">{post.content}</div>
+            <div className="bg-white rounded-lg p-6 mb-8">
+                <div className="prose max-w-none min-h-[200px] whitespace-pre-wrap">{post.content}</div>
             </div>
 
             <div className="flex justify-end gap-4 mb-8">
                 <Link to="/post/list" className="px-4 py-2 text-white bg-indigo-500 rounded hover:bg-indigo-600">
                     목록
                 </Link>
-                <Link to={`/post/edit/${id}`} className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
-                    수정
-                </Link>
                 <button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
                     삭제
                 </button>
             </div>
 
-            <div className="bg-white rounded-lg p-6 h-[300px] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">댓글 ({comments.length})</h2>
                 </div>
 
-                {/* 댓글 입력 폼 */}
-                <form onSubmit={handleCommentSubmit} className="mb-6">
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="댓글을 입력하세요"
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                {/* 댓글 입력 폼 - 로그인 상태에 따라 다르게 표시 */}
+                {auth.currentUser ? (
+                    <form onSubmit={handleCommentSubmit} className="mb-6">
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder="댓글을 입력하세요"
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                            >
+                                등록
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
+                        <p className="text-gray-600">댓글을 작성하려면 로그인이 필요합니다.</p>
+                        <Link
+                            to="/login"
+                            className="text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-2"
                         >
-                            등록
-                        </button>
+                            로그인하러 가기
+                        </Link>
                     </div>
-                </form>
+                )}
 
                 {/* 댓글 목록 */}
                 <div className="space-y-4">
                     {comments.map((comment) => (
                         <div key={comment.id} className="border-b pb-4">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium">{comment.author}</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-500">
-                                        {comment.createdAt?.toDate().toLocaleDateString()}
-                                    </span>
-                                    {auth.currentUser?.email === comment.author && (
-                                        <button
-                                            onClick={() => handleCommentDelete(comment.id)}
-                                            className="text-red-500 hover:text-red-700 text-sm"
-                                        >
-                                            삭제
-                                        </button>
-                                    )}
-                                </div>
+                                <p className="text-gray-700">{comment.content}</p>
+                                {auth.currentUser?.uid === comment.userId && (
+                                    <button
+                                        onClick={() => handleCommentDelete(comment.id, comment.userId)}
+                                        className="text-red-500 hover:text-red-700 text-sm ml-4"
+                                    >
+                                        삭제
+                                    </button>
+                                )}
                             </div>
-                            <p className="text-gray-700">{comment.content}</p>
                         </div>
                     ))}
                 </div>
